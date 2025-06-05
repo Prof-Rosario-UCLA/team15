@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package health.v1;
+
+option go_package = "github.com/Prof-Rosario-UCLA/team15/gen/go/proto/health/v1;healthpb";
+
+// Enum values must be prefixed with “STATUS_” and the zero-value should end with “_UNSPECIFIED”.
+enum Status {
+  STATUS_UNKNOWN_UNSPECIFIED = 0;
+  STATUS_UP                  = 1;
+  STATUS_DOWN                = 2;
+}
+
+message WatchHealthRequest {
+  string service_id = 1;
+}
+
+message WatchHealthResponse {
+  string   service_id   = 1;
+  Status   status       = 2;
+  int32    latency_ms   = 3;
+  float    error_rate   = 4;
+  int64    timestamp_ms = 5; // lower_snake_case
+}
+
+service HealthService {
+  rpc WatchHealth (WatchHealthRequest) returns (stream WatchHealthResponse);
+}

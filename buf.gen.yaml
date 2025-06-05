@@ -1,0 +1,22 @@
+# === team15/buf.gen.yaml ===
+version: v2
+
+plugins:
+  # --- Go: protobuf messages --------------------------------
+  - remote: buf.build/protocolbuffers/go:v1.36.6
+    out: backend/gen/go
+    opt:
+      - paths=source_relative
+
+  # --- Go: gRPC service stubs -------------------------------
+  - remote: buf.build/grpc/go:v1.5.1
+    out: backend/gen/go
+    opt:
+      - paths=source_relative
+
+  # --- TypeScript: gRPC-Web client stubs --------------------
+  - remote: buf.build/grpc/web:v1.5.0
+    out: frontend/gen/ts
+    opt:
+      - import_style=typescript
+      - mode=grpcweb

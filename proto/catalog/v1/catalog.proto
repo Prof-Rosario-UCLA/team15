@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package catalog.v1;
+
+option go_package = "github.com/Prof-Rosario-UCLA/team15/gen/go/proto/catalog/v1;catalogpb";
+
+// A single microservice’s metadata.
+message Service {
+  string id        = 1;
+  string name      = 2;
+  string owner     = 3;
+  string version   = 4;
+  string proto_url = 5;
+}
+
+// A request just to list all services (empty body).
+message ListServicesRequest {}
+
+// Because the lint rule wants a response type, wrap the repeated Service here:
+message ListServicesResponse {
+  repeated Service services = 1;
+}
+
+service CatalogService {
+  rpc ListServices (ListServicesRequest) returns (stream ListServicesResponse);
+}
