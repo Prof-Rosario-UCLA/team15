@@ -3,77 +3,75 @@ package main
 import (
 	"log"
 	"net"
-	"time"
+	"fmt"
 
-	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc"
+    "gorm.io/driver/postgres"
+    "gorm.io/gorm"
+
+    "google.golang.org/grpc"
+    "google.golang.org/grpc/reflection"
 
 	catalogpb "github.com/Prof-Rosario-UCLA/team15/gen/go/proto/catalog/v1"
 	healthpb  "github.com/Prof-Rosario-UCLA/team15/gen/go/proto/health/v1"
+	"github.com/Prof-Rosario-UCLA/team15/internal"
 )
 
-// catalogServer implements catalog.v1.CatalogServiceServer
-type catalogServer struct {
-	catalogpb.UnimplementedCatalogServiceServer
+// CatalogServer wraps gRPC and holds a DB reference
+type CatalogServer struct {
+    catalogpb.UnimplementedCatalogServiceServer
+    db *gorm.DB
 }
 
-// ListServices returns a hard-coded stream of ListServicesResponse messages
-func (s *catalogServer) ListServices(req *catalogpb.ListServicesRequest, stream catalogpb.CatalogService_ListServicesServer) error {
-	services := []*catalogpb.Service{
-		{Id: "webmvc", Name: "WebMVC", Owner: "TeamA", Version: "v1.0.0", ProtoUrl: "http://example.com/protos/webmvc.proto"},
-		{Id: "ordering", Name: "Ordering", Owner: "TeamB", Version: "v1.0.0", ProtoUrl: "http://example.com/protos/ordering.proto"},
-		{Id: "catalog", Name: "Catalog", Owner: "TeamC", Version: "v1.0.0", ProtoUrl: "http://example.com/protos/catalog.proto"},
-	}
-
-	for _, svc := range services {
-		resp := &catalogpb.ListServicesResponse{
-			Services: []*catalogpb.Service{svc},
-		}
-		if err := stream.Send(resp); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// healthServer implements health.v1.HealthServiceServer
-type healthServer struct {
-	healthpb.UnimplementedHealthServiceServer
-}
-
-// WatchHealth sends a few dummy health updates, then closes
-func (h *healthServer) WatchHealth(req *healthpb.WatchHealthRequest, stream healthpb.HealthService_WatchHealthServer) error {
-	updates := []*healthpb.WatchHealthResponse{
-		{ServiceId: req.ServiceId, Status: healthpb.Status_STATUS_UP, LatencyMs: 50, ErrorRate: 0, TimestampMs: 0},
-		{ServiceId: req.ServiceId, Status: healthpb.Status_STATUS_UP, LatencyMs: 70, ErrorRate: 0.1, TimestampMs: 0},
-		{ServiceId: req.ServiceId, Status: healthpb.Status_STATUS_DOWN, LatencyMs: 0, ErrorRate: 1.0, TimestampMs: 0},
-	}
-
-	for _, u := range updates {
-		if err := stream.Send(u); err != nil {
-			return err
-		}
-		// Sleep 1 second between updates
-		time.Sleep(time.Second)
-	}
-
-	return nil
+// HealthServer wraps gRPC and holds a DB reference
+type HealthServer struct {
+    healthpb.UnimplementedHealthServiceServer
+    db *gorm.DB
 }
 
 func main() {
-	lis, err := net.Listen("tcp", ":50051")
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
+    // 1) Connect to Postgres via GORM
+    dsn := "host=localhost user=team15 password=team15 dbname=team15 port=5432 sslmode=disable"
+    db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    if err != nil {
+        log.Fatalf("failed to connect to Postgres: %v", err)
+    }
 
-	s := grpc.NewServer()
-	catalogpb.RegisterCatalogServiceServer(s, &catalogServer{})
-	healthpb.RegisterHealthServiceServer(s, &healthServer{})
+    // 2) AutoMigrate our models (creates tables if they don’t exist)
+    if err := internal.Migrate(db); err != nil {
+        log.Fatalf("auto‐migrate failed: %v", err)
+    }
 
-	reflection.Register(s)
+    // 3) Seed initial services if none exist
+    var count int64
+    db.Model(&internal.ServiceModel{}).Count(&count)
+    if count == 0 {
+        initial := []internal.ServiceModel{
+            {ID: "webmvc", Name: "WebMVC", Owner: "TeamA", Version: "v1.0.0", ProtoURL: "http://example.com/protos/webmvc.proto"},
+            {ID: "ordering", Name: "Ordering", Owner: "TeamB", Version: "v1.0.0", ProtoURL: "http://example.com/protos/ordering.proto"},
+            {ID: "catalog", Name: "Catalog", Owner: "TeamC", Version: "v1.0.0", ProtoURL: "http://example.com/protos/catalog.proto"},
+        }
+        if err := db.Create(&initial).Error; err != nil {
+            log.Fatalf("failed to seed services: %v", err)
+        }
+        fmt.Println("Seeded initial services into the database.")
+    }
 
-	log.Println("gRPC server listening on :50051")
-	if err := s.Serve(lis); err != nil {
-		log.Fatalf("server error: %v", err)
-	}
+    // 4) Start the gRPC server
+    lis, err := net.Listen("tcp", ":50051")
+    if err != nil {
+        log.Fatalf("failed to listen: %v", err)
+    }
+    grpcServer := grpc.NewServer()
+
+    // 5) Register CatalogService and HealthService with DB-backed implementations
+	catalogpb.RegisterCatalogServiceServer(grpcServer, internal.NewCatalogServer(db))
+	healthpb.RegisterHealthServiceServer(grpcServer, internal.NewHealthServer(db))
+
+    // 6) Enable server reflection so grpcurl (and other tools) can probe
+    reflection.Register(grpcServer)
+
+    log.Println("gRPC server listening on :50051")
+    if err := grpcServer.Serve(lis); err != nil {
+        log.Fatalf("server error: %v", err)
+    }
 }
