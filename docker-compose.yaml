@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: team15-postgres
+    environment:
+      POSTGRES_USER: team15
+      POSTGRES_PASSWORD: team15
+      POSTGRES_DB:   team15
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+    driver: local
