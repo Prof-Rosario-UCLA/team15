@@ -11,6 +11,18 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  envoy:
+    image: envoyproxy/envoy:v1.26.1
+    container_name: team15-envoy
+    ports:
+      - "8080:8080" # Expose Envoy's port 8080
+    volumes:
+      - ./deploy/envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro # Mount the Envoy config
+    extra_hosts:
+      - "host.docker.internal:host-gateway"     # 'host-gateway' is a special string that resolves to the host's IP address.
+    depends_on:
+      - postgres # Optional: ensure postgres starts before envoy, though not strictly necessary for this config
+
 volumes:
   pgdata:
     driver: local
