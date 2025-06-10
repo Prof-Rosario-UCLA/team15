@@ -5,23 +5,38 @@ services:
     environment:
       POSTGRES_USER: team15
       POSTGRES_PASSWORD: team15
-      POSTGRES_DB:   team15
+      POSTGRES_DB: team15
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: team15-backend
+    ports:
+      - "50051:50051"
+      - "8081:8081"
+    depends_on:
+      - postgres
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=team15
+      - DB_PASSWORD=team15
+      - DB_NAME=team15
+
   envoy:
     image: envoyproxy/envoy:v1.26.1
     container_name: team15-envoy
     ports:
-      - "8080:8080" # Expose Envoy's port 8080
+      - "8080:8080"
     volumes:
-      - ./deploy/envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro # Mount the Envoy config
-    extra_hosts:
-      - "host.docker.internal:host-gateway"     # 'host-gateway' is a special string that resolves to the host's IP address.
+      - ./deploy/envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
     depends_on:
-      - postgres # Optional: ensure postgres starts before envoy, though not strictly necessary for this config
+      - backend
 
 volumes:
   pgdata:
