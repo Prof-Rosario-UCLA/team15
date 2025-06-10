@@ -32,7 +32,7 @@ services:
     image: envoyproxy/envoy:v1.26.1
     container_name: team15-envoy
     ports:
-      - "8084:8084"
+      - "8080:8080"
     volumes:
       - ./deploy/envoy/envoy.yaml:/etc/envoy/envoy.yaml:ro
     depends_on:
