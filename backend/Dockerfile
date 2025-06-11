@@ -1,34 +1,33 @@
-# Use the official Go image as base
+# Stage 1: build your Go binary
 FROM golang:1.24-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy go mod files
 COPY go.mod go.sum ./
 
-# Download dependencies
 RUN go mod download
 
-# Copy source code
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/main ./cmd/server
 
-# Use a minimal base image for the final stage
-FROM alpine:latest
+# Stage 2: runtime image with Envoy + your binary
+FROM envoyproxy/envoy:v1.29.1
 
-# Install ca-certificates for HTTPS requests
-RUN apk --no-cache add ca-certificates
+WORKDIR /
 
-WORKDIR /root/
+# Copy in the Go server binary
+COPY --from=builder /app/main /main
 
-# Copy the binary from builder stage
-COPY --from=builder /app/main .
+RUN chmod +x /main
 
-# Expose ports
-EXPOSE 50051 8081
+# Copy Envoy config
+COPY envoy.yaml /etc/envoy/envoy.yaml
 
-# Run the binary
-CMD ["./main"]
+# Expose the listening port
+EXPOSE 8080
+
+# Override Envoy’s default entrypoint:
+# 1) start your Go server in the background
+# 2) exec Envoy in the foreground (so it gets PID 1)
+ENTRYPOINT ["sh", "-c", "/main & exec envoy -c /etc/envoy/envoy.yaml"]

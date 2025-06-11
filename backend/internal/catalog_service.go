@@ -6,8 +6,6 @@ import (
 
 	catalogpb "github.com/Prof-Rosario-UCLA/team15/gen/go/proto/catalog/v1"
 	"github.com/redis/go-redis/v9"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
 
@@ -26,11 +24,6 @@ func (s *CatalogServerImpl) ListServices(req *catalogpb.ListServicesRequest, str
 	ctx := stream.Context()
 	cacheKey := "services:all"
 
-	// Input validation
-	if req == nil {
-		return status.Error(codes.InvalidArgument, "request cannot be nil")
-	}
-
 	// Try to get from cache first
 	cached, err := s.redis.Get(ctx, cacheKey).Result()
 	if err == nil {
@@ -48,7 +41,7 @@ func (s *CatalogServerImpl) ListServices(req *catalogpb.ListServicesRequest, str
 					}},
 				}
 				if err := stream.Send(resp); err != nil {
-					return status.Error(codes.Internal, "failed to send response: "+err.Error())
+					return err
 				}
 			}
 			return nil
@@ -58,14 +51,11 @@ func (s *CatalogServerImpl) ListServices(req *catalogpb.ListServicesRequest, str
 	// Cache miss - query database
 	var services []ServiceModel
 	if err := s.db.Find(&services).Error; err != nil {
-		return status.Error(codes.Internal, "database query failed: "+err.Error())
+		return err
 	}
 
 	// Cache the result for 5 minutes
-	servicesJSON, err := json.Marshal(services)
-	if err != nil {
-		return status.Error(codes.Internal, "failed to marshal services: "+err.Error())
-	}
+	servicesJSON, _ := json.Marshal(services)
 	s.redis.Set(ctx, cacheKey, servicesJSON, 5*time.Minute)
 
 	// Stream the results
@@ -80,7 +70,7 @@ func (s *CatalogServerImpl) ListServices(req *catalogpb.ListServicesRequest, str
 			}},
 		}
 		if err := stream.Send(resp); err != nil {
-			return status.Error(codes.Internal, "failed to send response: "+err.Error())
+			return err
 		}
 	}
 	return nil
