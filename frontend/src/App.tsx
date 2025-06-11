@@ -1,5 +1,6 @@
 import "./App.css";
 import SideBar from "./SideBar";
+import Login from "./Login";
 
 function App() {
   return (
@@ -13,6 +14,8 @@ function App() {
 
       <main className="flex flex-1">
         <SideBar />
+				{/* todo: all systems operational check */}
+				<Login />
       </main>
     </div>
   );
