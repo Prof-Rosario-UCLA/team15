@@ -5,7 +5,14 @@ const Login = () => {
     const username = formData.get("uname") as string;
     const password = formData.get("psw") as string;
 
-    await handleLogin(username, password);
+    const success = await handleLogin(username, password);
+
+    // todo: lift state up to App.tsx so you only display the currently selected Service
+    // if (success) {
+    //   fetchServices();
+    // } else {
+    //   console.log("Login failed");
+    // }
   };
   return (
     <form onSubmit={onSubmit}>
@@ -20,25 +27,33 @@ const Login = () => {
   );
 };
 
-async function handleLogin(username: string, password: string): Promise<void> {
+async function handleLogin(uname: string, psw: string): Promise<boolean> {
   try {
-    const response = await fetch("http://localhost:8080/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username: { username }, password: { password } }),
+    const params = new URLSearchParams({
+      Key: uname,
+      Value: psw,
     });
+    // console.log(`http://localhost:8080/login?${params.toString()}`);
+    const response = await fetch(
+      `http://localhost:8080/login?${params.toString()}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: uname, password: psw }),
+        credentials: "include",
+      }
+    );
 
-    const data = await response.json();
-
+    const text = await response.text(); // Consume the body once
+    console.log(text);
     if (response.ok) {
-      // Save the JWT for future use
-      //   localStorage.setItem("token", data.token);
-      console.log("Token: " + data.token);
+      return true;
     } else {
-      console.error("Login failed:", data.message);
+      return false;
     }
   } catch (error) {
     console.error("Network or server error:", error);
+    return false;
   }
 }
 
