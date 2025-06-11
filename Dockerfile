@@ -3,12 +3,15 @@ FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-COPY go.mod go.sum ./
+# Copy go mod files from backend directory
+COPY backend/go.mod backend/go.sum ./
 
 RUN go mod download
 
-COPY . .
+# Copy backend source code
+COPY backend/ .
 
+# Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/main ./cmd/server
 
 # Stage 2: runtime image with Envoy + your binary
@@ -21,8 +24,8 @@ COPY --from=builder /app/main /main
 
 RUN chmod +x /main
 
-# Copy Envoy config
-COPY envoy.yaml /etc/envoy/envoy.yaml
+# Copy Envoy config from backend directory
+COPY backend/envoy.yaml /etc/envoy/envoy.yaml
 
 # Expose the listening port
 EXPOSE 8080
