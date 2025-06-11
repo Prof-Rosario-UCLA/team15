@@ -1,5 +1,18 @@
-# Stage 1: build your Go binary
-FROM golang:1.24-alpine AS builder
+# Stage 1: Build Frontend
+FROM node:18-alpine AS frontend-builder
+
+WORKDIR /app/frontend
+
+# Copy frontend package files
+COPY frontend/package*.json ./
+RUN npm install
+
+# Copy frontend source and build
+COPY frontend/ ./
+RUN npm run build
+
+# Stage 2: Build Go Backend
+FROM golang:1.24-alpine AS backend-builder
 
 WORKDIR /app
 
@@ -14,15 +27,18 @@ COPY backend/ .
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /app/main ./cmd/server
 
-# Stage 2: runtime image with Envoy + your binary
+# Stage 3: Runtime image with Envoy + Go + Frontend
 FROM envoyproxy/envoy:v1.29.1
 
 WORKDIR /
 
 # Copy in the Go server binary
-COPY --from=builder /app/main /main
+COPY --from=backend-builder /app/main /main
 
 RUN chmod +x /main
+
+# Copy built frontend static files
+COPY --from=frontend-builder /app/frontend/dist /var/www/html
 
 # Copy Envoy config from backend directory
 COPY backend/envoy.yaml /etc/envoy/envoy.yaml
