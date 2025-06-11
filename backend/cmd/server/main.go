@@ -7,6 +7,7 @@ import (
 	"net"
 	"net/http" // Added for HTTP server
 	"os"
+	"strings"
 
 	catalogpb "github.com/Prof-Rosario-UCLA/team15/gen/go/proto/catalog/v1"
 	healthpb "github.com/Prof-Rosario-UCLA/team15/gen/go/proto/health/v1"
@@ -36,7 +37,22 @@ var secretKey = []byte("my-super-secret-key") // Added for JWT
 func main() {
 	// 1) Connect to Postgres via GORM
 	dbHost := getEnv("DB_HOST", "localhost")
-	dsn := fmt.Sprintf("host=%s user=team15 password=team15 dbname=team15 port=5432 sslmode=disable", dbHost)
+	dbUser := getEnv("DB_USER", "team15")
+	dbPassword := getEnv("DB_PASSWORD", "team15")
+	dbName := getEnv("DB_NAME", "team15")
+	dbPort := getEnv("DB_PORT", "5432")
+
+	var dsn string
+	if strings.Contains(dbHost, ":") {
+		// Cloud SQL connection name format: project:region:instance
+		dsn = fmt.Sprintf("host=/cloudsql/%s user=%s password=%s dbname=%s sslmode=disable",
+			dbHost, dbUser, dbPassword, dbName)
+	} else {
+		// Local/Docker connection
+		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+			dbHost, dbUser, dbPassword, dbName, dbPort)
+	}
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect to Postgres: %v", err)

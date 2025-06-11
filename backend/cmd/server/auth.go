@@ -9,7 +9,6 @@ import (
 )
 
 // jwtKey should be a long, random string in a real application.
-// For this example, we'll use the one specified in your project overview.
 var jwtKey = []byte("my-super-secret-key")
 
 type Credentials struct {
