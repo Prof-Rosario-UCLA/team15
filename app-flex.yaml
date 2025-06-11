@@ -1,0 +1,29 @@
+runtime: custom
+env: flex
+
+env_variables:
+  DB_HOST: "CLOUD_SQL_CONNECTION_NAME"
+  DB_PORT: "5432"
+  DB_USER: "team15"
+  DB_PASSWORD: "team15"
+  DB_NAME: "team15"
+  REDIS_HOST: "REDIS_IP_ADDRESS"
+  REDIS_PORT: "6379"
+
+beta_settings:
+  cloud_sql_instances: YOUR_PROJECT_ID:YOUR_REGION:YOUR_INSTANCE_NAME
+
+automatic_scaling:
+  min_num_instances: 1
+  max_num_instances: 10
+  cool_down_period_sec: 120
+  cpu_utilization:
+    target_utilization: 0.6
+
+resources:
+  cpu: 1
+  memory_gb: 2
+  disk_size_gb: 10
+
+network:
+  name: default

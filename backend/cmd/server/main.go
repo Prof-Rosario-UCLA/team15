@@ -1,16 +1,19 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
 	"net/http" // Added for HTTP server
-	"os"       // Added for environment variables
+	"os"
+	"strings"
 
 	catalogpb "github.com/Prof-Rosario-UCLA/team15/gen/go/proto/catalog/v1"
 	healthpb "github.com/Prof-Rosario-UCLA/team15/gen/go/proto/health/v1"
 	"github.com/Prof-Rosario-UCLA/team15/internal"
 	"github.com/go-chi/chi/v5" // Added for Chi router
+	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 	"gorm.io/driver/postgres"
@@ -33,40 +36,53 @@ var secretKey = []byte("my-super-secret-key") // Added for JWT
 
 func main() {
 	// 1) Connect to Postgres via GORM
-	dbHost := os.Getenv("DB_HOST")
-	if dbHost == "" {
-		dbHost = "localhost"
-	}
-	dbUser := os.Getenv("DB_USER")
-	if dbUser == "" {
-		dbUser = "team15"
-	}
-	dbPassword := os.Getenv("DB_PASSWORD")
-	if dbPassword == "" {
-		dbPassword = "team15"
-	}
-	dbName := os.Getenv("DB_NAME")
-	if dbName == "" {
-		dbName = "team15"
-	}
-	dbPort := os.Getenv("DB_PORT")
-	if dbPort == "" {
-		dbPort = "5432"
+	dbHost := getEnv("DB_HOST", "localhost")
+	dbUser := getEnv("DB_USER", "team15")
+	dbPassword := getEnv("DB_PASSWORD", "team15")
+	dbName := getEnv("DB_NAME", "team15")
+	dbPort := getEnv("DB_PORT", "5432")
+
+	var dsn string
+	if strings.Contains(dbHost, ":") {
+		// Cloud SQL connection name format: project:region:instance
+		dsn = fmt.Sprintf("host=/cloudsql/%s user=%s password=%s dbname=%s sslmode=disable",
+			dbHost, dbUser, dbPassword, dbName)
+	} else {
+		// Local/Docker connection
+		dsn = fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+			dbHost, dbUser, dbPassword, dbName, dbPort)
 	}
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable", 
-		dbHost, dbUser, dbPassword, dbName, dbPort)
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("failed to connect to Postgres: %v", err)
 	}
 
-	// 2) AutoMigrate our models (creates tables if they don’t exist)
+	// 2) Connect to Redis
+	redisHost := getEnv("REDIS_HOST", "localhost")
+	redisPort := getEnv("REDIS_PORT", "6379")
+	redisAddr := fmt.Sprintf("%s:%s", redisHost, redisPort)
+
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     redisAddr,
+		Password: "", // no password
+		DB:       0,  // default DB
+	})
+
+	// Test Redis connection
+	ctx := context.Background()
+	_, err = redisClient.Ping(ctx).Result()
+	if err != nil {
+		log.Fatalf("failed to connect to Redis: %v", err)
+	}
+	log.Printf("Connected to Redis at %s", redisAddr)
+
+	// 3) AutoMigrate our models (creates tables if they don’t exist)
 	if err := internal.Migrate(db); err != nil {
 		log.Fatalf("auto‐migrate failed: %v", err)
 	}
 
-	// 3) Seed initial services if none exist
+	// 4) Seed initial services if none exist
 	var count int64
 	db.Model(&internal.ServiceModel{}).Count(&count)
 	if count == 0 {
@@ -81,7 +97,7 @@ func main() {
 		fmt.Println("Seeded initial services into the database.")
 	}
 
-	// 4) Start HTTP login server on 8081
+	// 5) Start HTTP login server on 8081
 	router := chi.NewRouter()
 	router.Post("/login", loginHandler) // loginHandler is from backend/cmd/server/auth.go
 	httpLis, err := net.Listen("tcp4", "0.0.0.0:8081")
@@ -95,7 +111,7 @@ func main() {
 		}
 	}()
 
-	// 5) Start the gRPC server on 50051 (with JWT interceptors)
+	// 6) Start the gRPC server on 50051 (with JWT interceptors)
 	lis, err := net.Listen("tcp4", ":50051")
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -108,8 +124,8 @@ func main() {
 	grpcServer := grpc.NewServer(serverOpts...)
 
 	// Register CatalogService and HealthService with DB-backed implementations
-	catalogpb.RegisterCatalogServiceServer(grpcServer, internal.NewCatalogServer(db))
-	healthpb.RegisterHealthServiceServer(grpcServer, internal.NewHealthServer(db))
+	catalogpb.RegisterCatalogServiceServer(grpcServer, internal.NewCatalogServer(db, redisClient))
+	healthpb.RegisterHealthServiceServer(grpcServer, internal.NewHealthServer(db, redisClient))
 
 	// Enable server reflection so grpcurl (and other tools) can probe
 	reflection.Register(grpcServer)
@@ -118,4 +134,11 @@ func main() {
 	if err := grpcServer.Serve(lis); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
