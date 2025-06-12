@@ -135,26 +135,20 @@ The application provides real-time monitoring of microservices with live health 
 
 1. **Backend Health Check**
    ```bash
-   # Test gRPC endpoint via Envoy
-   curl -X POST http://localhost:8080/catalog.v1.CatalogService/ListServices \
-     -H "Content-Type: application/grpc-web+proto"
+   # From root directory of the project
+    grpcurl \
+      -proto proto/catalog/v1/catalog.proto \
+      -H "authorization: Bearer YOUR-TOKEN-HERE" \
+      -d '{}' \
+      team15-microservice-catalog.uw.r.appspot.com:443 catalog.v1.CatalogService/ListServices
    
    # Test HTTP login endpoint
-   curl -X POST http://localhost:8081/login \
+   curl -X POST http://localhost:8080/login \
      -H "Content-Type: application/json" \
      -d '{"username":"admin","password":"secret"}'
    ```
 
-2. **Database Connection**
-   ```bash
-   # Connect to PostgreSQL
-   docker exec -it team15-postgres psql -U admin -d microservices
-   
-   # Connect to Redis
-   docker exec -it team15-redis redis-cli
-   ```
-
-3. **Frontend Application**
+2. **Frontend Application**
    - Navigate to http://localhost:5173
    - Login with credentials: admin/secret
    - Verify real-time health data updates
@@ -216,29 +210,29 @@ fetch('/api/services', { headers: authHeaders });
 ###  Core Requirements Status
 
 #### Frontend Requirements 
-- [x] **Semantic HTML5**: Proper use of semantic elements (`<header>`, `<nav>`, `<main>`, `<section>`)
-- [x] **Responsive Design**: Mobile-first design with Tailwind CSS, tested on 320px+ screens
-- [x] **Single Page Application**: React 18 SPA with client-side routing
-- [x] **Production CSS Framework**: Tailwind CSS with PostCSS processing
-- [x] **Modern Framework**: React 18 with TypeScript, Parcel build system
+- **Semantic HTML5**: Proper use of semantic elements (`<header>`, `<nav>`, `<main>`, `<section>`)
+- **Responsive Design**: Mobile-first design with Tailwind CSS, tested on 320px+ screens
+- **Single Page Application**: React 18 SPA with client-side routing
+- **Production CSS Framework**: Tailwind CSS with PostCSS processing
+- **Modern Framework**: React 18 with TypeScript, Parcel build system
 
 #### Backend Requirements 
-- [x] **Database**: PostgreSQL 15 with GORM ORM
-- [x] **Caching**: Redis 7 for performance optimization
-- [x] **Real-time Communication**: gRPC-Web streaming for live health updates
-- [x] **API Design**: RESTful HTTP + gRPC APIs with proper error handling
+- **Database**: PostgreSQL 15 with GORM ORM
+- **Caching**: Redis 7 for performance optimization
+- **Real-time Communication**: gRPC-Web streaming for live health updates
+- **API Design**: RESTful HTTP + gRPC APIs with proper error handling
 
 #### Security Requirements 
-- [x] **Authentication**: JWT-based authentication system
-- [x] **SQL Injection Protection**: GORM ORM with prepared statements
-- [x] **XSS Prevention**: React JSX automatic escaping
-- [x] **CSRF Protection**: JWT tokens in headers, proper CORS configuration
+- **Authentication**: JWT-based authentication system
+- **SQL Injection Protection**: GORM ORM with prepared statements
+- **XSS Prevention**: React JSX automatic escaping
+- **CSRF Protection**: JWT tokens in headers, proper CORS configuration
 
 #### Development Best Practices 
-- [x] **Version Control**: Git repository with meaningful commits
-- [x] **Code Quality**: TypeScript, ESLint, Go formatting tools
-- [x] **Testing**: Unit, integration, and E2E testing strategies
-- [x] **Documentation**: Comprehensive README, API docs, deployment guides
+- **Version Control**: Git repository with meaningful commits
+- **Code Quality**: TypeScript, ESLint, Go formatting tools
+- **Testing**: Unit, integration, and E2E testing strategies
+- **Documentation**: Comprehensive README, API docs, deployment guides
 
 ### Implementation Details
 
@@ -310,7 +304,7 @@ stream.on('data', (response: HealthResponse) => {
 });
 ```
 
-## 📱 Usage Guide
+## Usage Guide
 
 1. **Login**: Use the credentials `admin`/`secret` to access the dashboard
 2. **Monitor Services**: View real-time health metrics for all microservices
@@ -329,14 +323,7 @@ stream.on('data', (response: HealthResponse) => {
    cd team15
    ```
 
-2. **Environment Setup**
-   ```bash
-   # Create environment file
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-3. **Start Backend Infrastructure**
+2. **Start Backend Infrastructure**
    ```bash
    # Start PostgreSQL, Redis, and Backend services
    docker-compose up -d
@@ -426,11 +413,6 @@ gcloud run deploy microservice-backend \
 # Build frontend
 cd frontend
 npm run build
-
-# Deploy frontend to Cloud Storage + CDN
-gsutil mb gs://$PROJECT_ID-frontend
-gsutil cp -r dist/* gs://$PROJECT_ID-frontend/
-gsutil web set -m index.html -e index.html gs://$PROJECT_ID-frontend
 ```
 
 ### Scaling Considerations
@@ -459,27 +441,10 @@ kubectl scale deployment backend --replicas=5
    - Use connection pooling
    - Implement backpressure handling
 
-### Backup and Recovery
-
-#### Database Backups
-
-```bash
-# Automated backup script
-#!/bin/bash
-BACKUP_DIR="/backups/$(date +%Y%m%d)"
-mkdir -p $BACKUP_DIR
-
-# PostgreSQL backup
-pg_dump -h $POSTGRES_HOST -U $POSTGRES_USER $POSTGRES_DB > $BACKUP_DIR/microservices.sql
-
-# Redis backup
-redis-cli --rdb $BACKUP_DIR/redis.rdb
-```
-
 #### Disaster Recovery
 
 1. **Data Recovery Process**
-   - Restore from latest backup
+   - Restore from latest backup through Postgres
    - Verify data integrity
    - Test application functionality
 
@@ -539,7 +504,7 @@ Authorization: Bearer <jwt-token>
 
 ##  Future Enhancements
 
-### Planned Features 🔄
+### Planned Features 
 - **Progressive Web App**: Service worker, offline functionality
 - **WebAssembly**: Data processing module in Go
 - **Machine Learning**: Predictive health monitoring
