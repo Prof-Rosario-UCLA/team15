@@ -11,8 +11,6 @@ static_resources:
               typed_config:
                 "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
                 stat_prefix: ingress_http
-                stream_idle_timeout: 0s  # Disable stream idle timeout
-                request_timeout: 0s      # Disable request timeout for streaming
                 access_log:
                   - name: envoy.access_loggers.stdout
                     typed_config:
@@ -48,7 +46,7 @@ static_resources:
                             prefix: "/"
                           route:
                             cluster: grpc_backend
-                            timeout: 0s  # Disable timeout for streaming connections
+                            timeout: 30s
                 http_filters:
                   - name: envoy.filters.http.cors
                     typed_config:
@@ -64,16 +62,11 @@ static_resources:
       connect_timeout: 0.25s
       type: LOGICAL_DNS
       lb_policy: ROUND_ROBIN
-      per_connection_buffer_limit_bytes: 32768  # 32KB buffer for streaming
       typed_extension_protocol_options:
         envoy.extensions.upstreams.http.v3.HttpProtocolOptions:
           "@type": type.googleapis.com/envoy.extensions.upstreams.http.v3.HttpProtocolOptions
           explicit_http_config:
-            http2_protocol_options:
-              initial_stream_window_size: 65536  # 64KB
-              initial_connection_window_size: 1048576  # 1MB
-            http_protocol_options:  # Also support HTTP/1.1 for gRPC-Web
-              accept_http_10: true
+            http2_protocol_options: {}
       load_assignment:
         cluster_name: grpc_backend
         endpoints:

@@ -97,12 +97,23 @@ export const ServicesProvider: React.FC<ServicesProviderProps> = ({ children }) 
     const stream = backendService.watchServiceHealth(
       serviceId,
       (healthData: healthPb.WatchHealthResponse.AsObject) => { // Use the specific gRPC type
-        console.log(`Received health data for ${serviceId}:`, healthData);
-        setServices(prev => prev.map(service => 
-          service.id === serviceId 
-            ? { ...service, health: healthData } // healthData is already WatchHealthResponse.AsObject
-            : service
-        ));
+        console.log(`[ServicesContext] Received health data for ${healthData.serviceId} (stream for ${serviceId}):`, healthData);
+        setServices(prevServices => {
+          console.log(`[ServicesContext] Updating services for ${healthData.serviceId}. Previous services count: ${prevServices.length}`);
+          const updatedServices = prevServices.map(service => {
+            // Use healthData.serviceId from the payload for matching
+            if (service.id === healthData.serviceId) {
+              console.log(`[ServicesContext] Matched service ${service.id}. Updating health. Old health:`, service.health, "New health:", healthData);
+              return { ...service, health: healthData };
+            }
+            return service;
+          });
+          const updatedServiceForLog = updatedServices.find(s => s.id === healthData.serviceId);
+          console.log(`[ServicesContext] Service ${healthData.serviceId} in updatedServices array after map:`, updatedServiceForLog);
+          // To avoid excessive logging, comment out the next line if it's too verbose
+          // console.log(`[ServicesContext] Full updatedServices array for ${healthData.serviceId}:`, updatedServices);
+          return updatedServices;
+        });
       },
       (error) => {
         console.error(`Health monitoring error for ${serviceId}:`, error);
