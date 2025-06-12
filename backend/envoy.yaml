@@ -41,11 +41,22 @@ static_resources:
                           route:
                             cluster: http_login
                             timeout: 30s
-                        # 2) Others → gRPC backend
+                        # 2) gRPC API calls (any path with gRPC content-type or specific service paths)
+                        - match:
+                            prefix: "/catalog.v1.CatalogService"
+                          route:
+                            cluster: grpc_backend
+                            timeout: 30s
+                        - match:
+                            prefix: "/health.v1.HealthService"
+                          route:
+                            cluster: grpc_backend
+                            timeout: 30s
+                        # 3) Static files - everything else goes to frontend
                         - match:
                             prefix: "/"
                           route:
-                            cluster: grpc_backend
+                            cluster: frontend_static
                             timeout: 30s
                 http_filters:
                   - name: envoy.filters.http.cors
@@ -58,6 +69,19 @@ static_resources:
                     typed_config:
                       "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
   clusters:
+    - name: frontend_static
+      connect_timeout: 0.25s
+      type: LOGICAL_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: frontend_static
+        endpoints:
+          - lb_endpoints:
+              - endpoint:
+                  address:
+                    socket_address:
+                      address: 127.0.0.1
+                      port_value: 8090
     - name: grpc_backend
       connect_timeout: 0.25s
       type: LOGICAL_DNS
