@@ -24,8 +24,9 @@ export class BackendService {
   private healthClient: healthGrpc.HealthServiceClient;
   private catalogClient: catalogGrpc.CatalogServiceClient;
 
-  constructor(baseUrl: string = 'http://localhost:8080') {
-    this.baseUrl = baseUrl;
+  constructor(baseUrl?: string) {
+    // Use current origin in production, localhost in development
+    this.baseUrl = baseUrl || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8080');
     
     // Configure gRPC-Web clients with streaming options
     const options = {
