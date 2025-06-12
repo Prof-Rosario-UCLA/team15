@@ -16,13 +16,12 @@ const Service = ({ name, status, selected, onClick }: ServiceProps) => {
   // Use getStatusColor for the dot, and mapStatusToLegacy for any legacy text if needed
   // For now, let's assume the dot color is the primary concern.
   // The old logic used 'working', 'partial', 'down'. We need to map the new enum status.
-  const statusColorClass = status !== undefined ? getStatusColor(status) : 'bg-gray-400'; // Default if status is undefined
+  const statusColorClass =
+    status !== undefined ? getStatusColor(status) : "bg-gray-400"; // Default if status is undefined
 
   return (
-    <div className="flex justify-between items-center p-2 hover:bg-gray-200 dark:hover:bg-gray-700">
-      <div
-        className={`w-3 h-3 rounded-full ${statusColorClass}`}
-      ></div>
+    <div className="flex justify-around items-center p-2 hover:bg-gray-200 dark:hover:bg-gray-700">
+      <div className={`w-3 h-3 rounded-full ${statusColorClass}`}></div>
       <div className={`${base} ${selectedStyle}`} onClick={onClick}>
         {name}
       </div>

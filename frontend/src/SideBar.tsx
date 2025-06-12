@@ -8,9 +8,8 @@ const SideBar = () => {
   const { services, selectedService, setSelectedService, isLoading, error } =
     useServices();
 
-  const [displayedServices, setDisplayedServices] = useState<ServiceWithHealth[]>(
-    services
-  );
+  const [displayedServices, setDisplayedServices] =
+    useState<ServiceWithHealth[]>(services);
 
   React.useEffect(() => {
     setDisplayedServices(services);
@@ -33,7 +32,9 @@ const SideBar = () => {
     const fromIndex = displayedServices.findIndex(
       (s) => s.id === fromServiceId
     );
-    const toIndex = displayedServices.findIndex((s) => s.id === targetServiceId);
+    const toIndex = displayedServices.findIndex(
+      (s) => s.id === targetServiceId
+    );
 
     if (fromIndex === -1 || toIndex === -1) return;
 
@@ -51,9 +52,9 @@ const SideBar = () => {
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
   return (
-    <div className="flex flex-col w-64 m-0 bg-gray-100 dark:bg-gray-900 text-black dark:text-white shadow min-h-screen">
+    <div className="flex flex-col w-auto m-0 bg-gray-100 dark:bg-gray-900 text-black dark:text-white shadow">
       <h1 className="text-2xl m-5 text-center">Service Catalog</h1>
-      <div className="flex-grow overflow-y-auto">
+      <div className="overflow-y-auto">
         {displayedServices.map((service) => (
           <div
             key={service.id}
