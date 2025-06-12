@@ -27,13 +27,13 @@ The application provides real-time monitoring of microservices with live health 
 ### Architecture Diagram
 
 ```
-┌─────────────────┐    HTTPS/WSS     ┌─────────────────┐
+┌─────────────────┐    HTTPS/WSS      ┌─────────────────┐
 │   Frontend      │◄─────────────────►│   Envoy Proxy   │
 │   (React/Parcel)│                   │   (gRPC-Web)    │
 │   Port: 5173    │                   │   Port: 8080    │
 └─────────────────┘                   └─────────────────┘
          │                                       │
-         │ gRPC-Web Streams                     │ gRPC
+         │ gRPC-Web Streams                      │ gRPC
          │ (Health Monitoring)                   │
          │                                       ▼
          │                           ┌─────────────────┐
@@ -43,7 +43,7 @@ The application provides real-time monitoring of microservices with live health 
          │                           └─────────────────┘
          │                                       │
          │ HTTP Login                            │
-         └─────────────────────────────────────────┤
+         └───────────────────────────────────────┤
                                                  │
                                                  ▼
                                    ┌─────────────────┐
