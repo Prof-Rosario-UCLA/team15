@@ -1,8 +1,19 @@
-# Stage 1: Copy pre-built frontend static files
-FROM alpine:latest AS frontend-files
+# Stage 1: Build frontend
+FROM node:18-alpine AS frontend-builder
 
-# Copy the pre-built frontend files from the local dist directory
-COPY frontend/dist /var/www/html
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package.json frontend/package-lock.json* ./
+
+# Install dependencies
+RUN npm install
+
+# Copy frontend source code
+COPY frontend/ ./
+
+# Build the frontend
+RUN npm run build
 
 # Stage 2: Build Go binary
 FROM golang:1.24-alpine AS backend-builder
@@ -34,7 +45,7 @@ COPY --from=backend-builder /app/main /main
 RUN chmod +x /main
 
 # Copy frontend static files to nginx html directory
-COPY --from=frontend-files /var/www/html /var/www/html
+COPY --from=frontend-builder /app/dist /var/www/html
 
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/sites-available/default

@@ -34,3 +34,5 @@ dist-ssr
 *.test
 *_test.go
 backend/server
+*/.parcel-cache/*
+*/dist/*
