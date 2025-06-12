@@ -1,8 +1,32 @@
-import React from "react";
+type ServiceStatus = "working" | "partial" | "down";
 
-const Service = ({ name }: { name: string }) => {
-  // needs an icon for status
-  return <div className="text-center hover:bg-gray-600">Service {name}</div>;
+type ServiceProps = {
+  name: string;
+  status: ServiceStatus;
+  selected?: boolean;
+  onClick?: () => void;
+};
+
+const Service = ({ name, status, selected, onClick }: ServiceProps) => {
+  const base = "cursor-pointer text-center text-lg px-4 py-2";
+  const selectedStyle = selected ? "font-bold" : "font-normal";
+
+  return (
+    <div className="flex justify-between items-center p-2 hover:bg-gray-200 dark:hover:bg-gray-700">
+      <div
+        className={`w-3 h-3 rounded-full ${
+          status === "working"
+            ? "bg-green-500"
+            : status === "partial"
+            ? "bg-yellow-500"
+            : "bg-red-500"
+        }`}
+      ></div>
+      <div className={`${base} ${selectedStyle}`} onClick={onClick}>
+        {name}
+      </div>
+    </div>
+  );
 };
 
 export default Service;
