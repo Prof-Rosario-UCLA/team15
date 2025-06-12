@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { setTheme } from "./utils/theme";
 
 type Theme = "light" | "dark" | "system";

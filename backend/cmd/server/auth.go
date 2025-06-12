@@ -55,5 +55,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		Secure:   false, // Should be true in production (HTTPS)
 	}
 	http.SetCookie(w, cookie)
+
+	// Also return the token in the response body for gRPC-Web usage
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{
+		"token":   tokenString,
+		"message": "Login successful",
+	})
 }

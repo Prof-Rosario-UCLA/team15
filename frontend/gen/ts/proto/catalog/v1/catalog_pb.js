@@ -11,6 +11,16 @@
 /* eslint-disable */
 // @ts-nocheck
 
+var jspb = require('google-protobuf');
+var goog = jspb;
+var global =
+    (typeof globalThis !== 'undefined' && globalThis) ||
+    (typeof window !== 'undefined' && window) ||
+    (typeof global !== 'undefined' && global) ||
+    (typeof self !== 'undefined' && self) ||
+    (function () { return this; }).call(null) ||
+    Function('return this')();
+
 goog.exportSymbol('proto.catalog.v1.ListServicesRequest', null, global);
 goog.exportSymbol('proto.catalog.v1.ListServicesResponse', null, global);
 goog.exportSymbol('proto.catalog.v1.Service', null, global);
@@ -588,3 +598,4 @@ proto.catalog.v1.ListServicesResponse.prototype.clearServicesList = function() {
 };
 
 
+goog.object.extend(exports, proto.catalog.v1);

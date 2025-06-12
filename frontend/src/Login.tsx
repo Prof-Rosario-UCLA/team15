@@ -1,3 +1,6 @@
+import React from "react";
+import { backendService } from "./BackendService";
+
 const Login = () => {
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -5,14 +8,19 @@ const Login = () => {
     const username = formData.get("uname") as string;
     const password = formData.get("psw") as string;
 
-    const success = await handleLogin(username, password);
+    const success = await backendService.login(username, password);
 
-    // todo: lift state up to App.tsx so you only display the currently selected Service
-    // if (success) {
-    //   fetchServices();
-    // } else {
-    //   console.log("Login failed");
-    // }
+    if (success) {
+      console.log("Login successful");
+      try {
+        const services = await backendService.fetchServices();
+        console.log("Services:", services);
+      } catch (error) {
+        console.error("Failed to fetch services:", error);
+      }
+    } else {
+      console.log("Login failed");
+    }
   };
   return (
     <form onSubmit={onSubmit}>
@@ -26,35 +34,5 @@ const Login = () => {
     </form>
   );
 };
-
-async function handleLogin(uname: string, psw: string): Promise<boolean> {
-  try {
-    const params = new URLSearchParams({
-      Key: uname,
-      Value: psw,
-    });
-    // console.log(`http://localhost:8080/login?${params.toString()}`);
-    const response = await fetch(
-      `http://localhost:8080/login?${params.toString()}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: uname, password: psw }),
-        credentials: "include",
-      }
-    );
-
-    const text = await response.text(); // Consume the body once
-    console.log(text);
-    if (response.ok) {
-      return true;
-    } else {
-      return false;
-    }
-  } catch (error) {
-    console.error("Network or server error:", error);
-    return false;
-  }
-}
 
 export default Login;

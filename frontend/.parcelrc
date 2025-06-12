@@ -1,21 +1,7 @@
 {
   "extends": "@parcel/config-default",
   "transformers": {
-    "*.{js,jsx}": ["@parcel/transformer-js"]
-  },
-  "resolvers": ["@parcel/resolver-default"],
-  "bundler": "@parcel/bundler-default",
-  "namers": ["@parcel/namer-default"],
-  "runtimes": ["@parcel/runtime-js", "@parcel/runtime-browser-hmr"],
-  "optimizers": {
-    "*.{js,jsx}": [
-      "@parcel/optimizer-swc"
-    ]
-  },
-  "packagers": {
-    "*.{js,jsx}": "@parcel/packager-js"
-  },
-  "compressors": {
-    "*": ["@parcel/compressor-brotli", "@parcel/compressor-gzip"]
+    "*.{ts,tsx}": ["@parcel/transformer-typescript-tsc"],
+    "*.css": ["@parcel/transformer-postcss", "@parcel/transformer-css"]
   }
 }

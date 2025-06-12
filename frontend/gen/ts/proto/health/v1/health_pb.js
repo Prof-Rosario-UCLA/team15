@@ -11,6 +11,16 @@
 /* eslint-disable */
 // @ts-nocheck
 
+var jspb = require('google-protobuf');
+var goog = jspb;
+var global =
+    (typeof globalThis !== 'undefined' && globalThis) ||
+    (typeof window !== 'undefined' && window) ||
+    (typeof global !== 'undefined' && global) ||
+    (typeof self !== 'undefined' && self) ||
+    (function () { return this; }).call(null) ||
+    Function('return this')();
+
 goog.exportSymbol('proto.health.v1.Status', null, global);
 goog.exportSymbol('proto.health.v1.WatchHealthRequest', null, global);
 goog.exportSymbol('proto.health.v1.WatchHealthResponse', null, global);
@@ -445,3 +455,4 @@ proto.health.v1.Status = {
   STATUS_DOWN: 2
 };
 
+goog.object.extend(exports, proto.health.v1);
