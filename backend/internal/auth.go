@@ -22,17 +22,38 @@ func JWTInterceptor(secretKey []byte) grpc.UnaryServerInterceptor {
 			return nil, status.Error(codes.Unauthenticated, "no metadata provided")
 		}
 
+		var tokenString string
+
+		// Try Authorization header first
 		authHeaders := md.Get("authorization")
-		if len(authHeaders) == 0 {
-			return nil, status.Error(codes.Unauthenticated, "authorization token not provided")
-		}
+		if len(authHeaders) > 0 {
+			if !strings.HasPrefix(authHeaders[0], "Bearer ") {
+				return nil, status.Error(codes.Unauthenticated, "authorization token must be Bearer token")
+			}
+			tokenString = strings.TrimPrefix(authHeaders[0], "Bearer ")
+		} else {
+			// Try cookie header as fallback
+			cookieHeaders := md.Get("cookie")
+			if len(cookieHeaders) == 0 {
+				return nil, status.Error(codes.Unauthenticated, "no authorization token or cookie provided")
+			}
 
-		tokenString := authHeaders[0]
-		if !strings.HasPrefix(tokenString, "Bearer ") {
-			return nil, status.Error(codes.Unauthenticated, "authorization token must be Bearer token")
-		}
+			// Parse cookies to find access_token
+			for _, cookieHeader := range cookieHeaders {
+				cookies := strings.Split(cookieHeader, ";")
+				for _, cookie := range cookies {
+					cookie = strings.TrimSpace(cookie)
+					if strings.HasPrefix(cookie, "access_token=") {
+						tokenString = strings.TrimPrefix(cookie, "access_token=")
+						break
+					}
+				}
+			}
 
-		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+			if tokenString == "" {
+				return nil, status.Error(codes.Unauthenticated, "access_token cookie not found")
+			}
+		}
 
 		token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return secretKey, nil
@@ -58,17 +79,38 @@ func JWTStreamInterceptor(secretKey []byte) grpc.StreamServerInterceptor {
 			return status.Error(codes.Unauthenticated, "no metadata provided")
 		}
 
+		var tokenString string
+
+		// Try Authorization header first
 		authHeaders := md.Get("authorization")
-		if len(authHeaders) == 0 {
-			return status.Error(codes.Unauthenticated, "authorization token not provided")
-		}
+		if len(authHeaders) > 0 {
+			if !strings.HasPrefix(authHeaders[0], "Bearer ") {
+				return status.Error(codes.Unauthenticated, "authorization token must be Bearer token")
+			}
+			tokenString = strings.TrimPrefix(authHeaders[0], "Bearer ")
+		} else {
+			// Try cookie header as fallback
+			cookieHeaders := md.Get("cookie")
+			if len(cookieHeaders) == 0 {
+				return status.Error(codes.Unauthenticated, "no authorization token or cookie provided")
+			}
 
-		tokenString := authHeaders[0]
-		if !strings.HasPrefix(tokenString, "Bearer ") {
-			return status.Error(codes.Unauthenticated, "authorization token must be Bearer token")
-		}
+			// Parse cookies to find access_token
+			for _, cookieHeader := range cookieHeaders {
+				cookies := strings.Split(cookieHeader, ";")
+				for _, cookie := range cookies {
+					cookie = strings.TrimSpace(cookie)
+					if strings.HasPrefix(cookie, "access_token=") {
+						tokenString = strings.TrimPrefix(cookie, "access_token=")
+						break
+					}
+				}
+			}
 
-		tokenString = strings.TrimPrefix(tokenString, "Bearer ")
+			if tokenString == "" {
+				return status.Error(codes.Unauthenticated, "access_token cookie not found")
+			}
+		}
 
 		token, err := jwt.ParseWithClaims(tokenString, &jwt.RegisteredClaims{}, func(token *jwt.Token) (interface{}, error) {
 			return secretKey, nil
