@@ -3,11 +3,7 @@
 
 ##  Project Overview
 
-A real-time microservice monitoring dashboard built with React, Go, gRPC, and Docker. This project demonstrates modern web development practices including real-time streaming, containerization, and secure authentication.
-
-###  Live Demo
-
-The application provides real-time monitoring of microservices with live health metrics and status updates.
+A real-time microservice monitoring dashboard built with React, Go, gRPC, and Docker. The application displays real-time updates of different microservices with live health metrics and status. This project demonstrates modern web development practices including real-time streaming, containerization, and secure authentication.
 
 **Login Credentials (Development):**
 - Username: `admin`
