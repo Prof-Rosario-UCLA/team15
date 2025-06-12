@@ -44,7 +44,7 @@ const SideBar = ({
   };
 
   return (
-    <div className="flex flex-col w-40 m-0 bg-gray-100 dark:bg-gray-900 text-black dark:text-white shadow">
+    <div className="flex flex-col w-auto m-0 bg-gray-100 dark:bg-gray-900 text-black dark:text-white shadow">
       <h1 className="text-2xl m-5 text-center">Service Catalog</h1>
       {services.map(({ name, status }, index) => (
         <div

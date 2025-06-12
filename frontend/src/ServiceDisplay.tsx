@@ -88,8 +88,8 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
         <h3 className="text-1xl m-2">ID: {id}</h3>
         <h3 className="text-1xl m-2">Owner: {owner}</h3>
         <h3 className="text-1xl m-2">Version: {version}</h3>
-        <div className="grid grid-cols-5 gap-4 mb-6">
-          <div className="border rounded p-4 text-center">
+        <div className="flex flex-wrap gap-4 mb-6">
+          <div className="border rounded p-4 text-center flex-1 min-w-[100px] max-w-full">
             <div className="text-sm text-gray-600 dark:text-white">
               Current Status
             </div>
@@ -98,14 +98,14 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
             </div>
           </div>
 
-          <div className="border rounded p-4 text-center">
+          <div className="border rounded p-4 text-center flex-1 min-w-[100px] max-w-full">
             <div className="text-sm text-gray-600 dark:text-white">
               Last Latency
             </div>
             <div className="text-xl font-bold">{lastLatency} ms</div>
           </div>
 
-          <div className="border rounded p-4 text-center">
+          <div className="border rounded p-4 text-center flex-1 min-w-[100px] max-w-full">
             <div className="text-sm text-gray-600 dark:text-white">
               Average Latency
             </div>
@@ -117,7 +117,7 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
             </div>
           </div>
 
-          <div className="border rounded p-4 text-center dark:text-white">
+          <div className="border rounded p-4 text-center flex-1 min-w-[100px] max-w-full">
             <div className="text-sm text-gray-600 dark:text-white">
               Last Error Rate
             </div>
@@ -126,7 +126,7 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
             </div>
           </div>
 
-          <div className="border rounded p-4 text-center dark:text-white">
+          <div className="border rounded p-4 text-center flex-1 min-w-[100px] max-w-full">
             <div className="text-sm text-gray-600 dark:text-white">
               Average Error Rate
             </div>
@@ -140,8 +140,8 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
           </div>
         </div>
 
-        <div className="border rounded p-4 h-94 flex items-end justify-between bg-white dark:bg-gray-900 m-2">
-          <div className="h-full w-full relative">
+        <div className="border rounded p-4 flex items-end justify-between bg-white dark:bg-gray-900 m-2">
+          <div className="h-full w-full relative max-w-[600px] aspect-[4/3]">
             <svg
               viewBox="0 0 100 100"
               preserveAspectRatio="xMidYMid meet"
@@ -238,8 +238,8 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
             </svg>
           </div>
         </div>
-        <div className="border rounded p-4 h-94 flex items-end justify-between bg-white dark:bg-gray-900 m-2">
-          <div className="h-full w-full relative">
+        <div className="border rounded p-4 flex items-end justify-between bg-white dark:bg-gray-900 m-2">
+          <div className="h-full w-full relative max-w-[600px] aspect-[4/3]">
             <svg
               viewBox="0 0 100 100"
               preserveAspectRatio="xMidYMid meet"
