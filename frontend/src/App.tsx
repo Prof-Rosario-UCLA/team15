@@ -72,7 +72,7 @@ const DashboardLayout = () => {
         </h2>
       </header>
 
-      <main className="flex flex-1 overflow-y-hidden">
+      <main className="flex flex-1 overflow-y-auto">
         <SideBar />
         <ServiceDisplay />
       </main>
