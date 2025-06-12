@@ -77,7 +77,7 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
     .join(" ");
 
   return (
-    <div className="w-full bg-gray-100">
+    <div className="w-full bg-gray-100 overflow-y-auto">
       <div className="max-w-2xl mx-auto p-6 bg-gray-100 text-gray-800">
         <h2 className="text-2xl font-semibold m-2">Service: {name}</h2>
         <h3 className="text-1xl m-2">ID: {id}</h3>
@@ -120,7 +120,7 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
                 errorRates.reduce((sum, val) => sum + val, 0) /
                 errorRates.length
               ).toFixed(2)}{" "}
-              ms
+              %
             </div>
           </div>
         </div>
@@ -215,96 +215,6 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
                 stroke="#4B5563"
                 strokeWidth="1"
                 points={latencyPoints}
-              />
-            </svg>
-            <svg
-              viewBox="0 0 100 100"
-              preserveAspectRatio="xMidYMid meet"
-              className="w-full h-full"
-            >
-              {/* Graph Title */}
-              <text
-                x="50"
-                y="10"
-                fontSize="5"
-                fill="#374151"
-                textAnchor="middle"
-                fontWeight="bold"
-              >
-                Error Rate (ms)
-              </text>
-              {/* Y-axis ticks and labels */}
-              {[0, 0.25, 0.5, 0.75, 1].map((fraction, i) => {
-                const error_rate = (100 - 100 * fraction).toFixed(0);
-                const y = 15 + 75 * fraction;
-                return (
-                  <g key={i}>
-                    <line
-                      x1="0"
-                      y1={y}
-                      x2="100"
-                      y2={y}
-                      stroke="#E5E7EB"
-                      strokeWidth="0.5"
-                    />
-                    <text
-                      x="-10"
-                      y={y}
-                      fontSize="2"
-                      fill="#9CA3AF"
-                      dominantBaseline="middle"
-                    >
-                      {error_rate}ms
-                    </text>
-                  </g>
-                );
-              })}
-
-              {/* X-axis line */}
-              <line
-                x1="0"
-                y1="90"
-                x2="100"
-                y2="90"
-                stroke="#E5E7EB"
-                strokeWidth="0.5"
-              />
-
-              {/* X-axis tick marks and labels */}
-              {timestamps.map((timestamp, i) => {
-                const maxTimestamp = timestamps[timestamps.length - 1];
-                const x = (timestamp / maxTimestamp) * 100;
-                return (
-                  <g key={i}>
-                    {/* Tick line */}
-                    <line
-                      x1={x}
-                      y1="90"
-                      x2={x}
-                      y2="93"
-                      stroke="#9CA3AF"
-                      strokeWidth="0.5"
-                    />
-                    {/* Tick label */}
-                    <text
-                      x={x}
-                      y="98"
-                      fontSize="3"
-                      fill="#6B7280"
-                      textAnchor="middle"
-                    >
-                      {timestamp}
-                    </text>
-                  </g>
-                );
-              })}
-
-              {/* Polyline for latency */}
-              <polyline
-                fill="none"
-                stroke="#4B5563"
-                strokeWidth="1"
-                points={errorPoints}
               />
             </svg>
           </div>
