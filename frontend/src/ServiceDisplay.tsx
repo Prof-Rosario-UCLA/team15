@@ -49,7 +49,9 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
 
   if (!selectedService) {
     return (
-      <div className="p-6 text-gray-500">Select a service to view details.</div>
+      <div className="w-full p-6 bg-white dark:bg-gray-900 text-gray-500 dark:text-white">
+        Select a service to view details.
+      </div>
     );
   }
 
@@ -73,31 +75,40 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
     .map((t, i) => `${(t / 100) * 100},${normalize(latencies[i]).toFixed(2)}`)
     .join(" ");
   const errorPoints = timestamps
-    .map((t, i) => `${(t / 100) * 100},${normalize(errorRates[i]).toFixed(2)}`)
+    .map(
+      (t, i) =>
+        `${(t / 100) * 100},${normalize(errorRates[i] * 100).toFixed(2)}`
+    )
     .join(" ");
 
   return (
-    <div className="w-full bg-gray-100 overflow-y-auto">
-      <div className="max-w-2xl mx-auto p-6 bg-gray-100 text-gray-800">
+    <div className="w-full bg-gray-100 dark:bg-gray-900 overflow-y-auto">
+      <div className="max-w-2xl mx-auto p-6 bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-white">
         <h2 className="text-2xl font-semibold m-2">Service: {name}</h2>
         <h3 className="text-1xl m-2">ID: {id}</h3>
         <h3 className="text-1xl m-2">Owner: {owner}</h3>
         <h3 className="text-1xl m-2">Version: {version}</h3>
         <div className="grid grid-cols-5 gap-4 mb-6">
           <div className="border rounded p-4 text-center">
-            <div className="text-sm text-gray-600">Current Status</div>
+            <div className="text-sm text-gray-600 dark:text-white">
+              Current Status
+            </div>
             <div className="text-xl font-bold">
               {status.replace("STATUS_", "")}
             </div>
           </div>
 
           <div className="border rounded p-4 text-center">
-            <div className="text-sm text-gray-600">Last Latency</div>
+            <div className="text-sm text-gray-600 dark:text-white">
+              Last Latency
+            </div>
             <div className="text-xl font-bold">{lastLatency} ms</div>
           </div>
 
           <div className="border rounded p-4 text-center">
-            <div className="text-sm text-gray-600">Average Latency</div>
+            <div className="text-sm text-gray-600 dark:text-white">
+              Average Latency
+            </div>
             <div className="text-xl font-bold">
               {(
                 latencies.reduce((sum, val) => sum + val, 0) / latencies.length
@@ -106,15 +117,19 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
             </div>
           </div>
 
-          <div className="border rounded p-4 text-center">
-            <div className="text-sm text-gray-600">Last Error Rate</div>
+          <div className="border rounded p-4 text-center dark:text-white">
+            <div className="text-sm text-gray-600 dark:text-white">
+              Last Error Rate
+            </div>
             <div className="text-xl font-bold">
               {(lastErrorRate * 100).toFixed(1)}%
             </div>
           </div>
 
-          <div className="border rounded p-4 text-center">
-            <div className="text-sm text-gray-600">Average Error Rate</div>
+          <div className="border rounded p-4 text-center dark:text-white">
+            <div className="text-sm text-gray-600 dark:text-white">
+              Average Error Rate
+            </div>
             <div className="text-xl font-bold">
               {(
                 errorRates.reduce((sum, val) => sum + val, 0) /
@@ -125,7 +140,7 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
           </div>
         </div>
 
-        <div className="border rounded p-4 h-94 flex items-end justify-between bg-white">
+        <div className="border rounded p-4 h-94 flex items-end justify-between bg-white dark:bg-gray-900 m-2">
           <div className="h-full w-full relative">
             <svg
               viewBox="0 0 100 100"
@@ -135,11 +150,12 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
               {/* Graph Title */}
               <text
                 x="50"
-                y="10"
+                y="5"
                 fontSize="5"
                 fill="#374151"
                 textAnchor="middle"
                 fontWeight="bold"
+                className="dark:fill-white"
               >
                 Latency (ms)
               </text>
@@ -163,6 +179,7 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
                       fontSize="2"
                       fill="#9CA3AF"
                       dominantBaseline="middle"
+                      className="dark:fill-white"
                     >
                       {latencyValue}ms
                     </text>
@@ -202,6 +219,7 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
                       fontSize="3"
                       fill="#6B7280"
                       textAnchor="middle"
+                      className="dark:fill-white"
                     >
                       {timestamp}
                     </text>
@@ -215,6 +233,105 @@ const ServiceDisplay = ({ currentService }: ServiceDisplayProps) => {
                 stroke="#4B5563"
                 strokeWidth="1"
                 points={latencyPoints}
+                className="dark:stroke-white"
+              />
+            </svg>
+          </div>
+        </div>
+        <div className="border rounded p-4 h-94 flex items-end justify-between bg-white dark:bg-gray-900 m-2">
+          <div className="h-full w-full relative">
+            <svg
+              viewBox="0 0 100 100"
+              preserveAspectRatio="xMidYMid meet"
+              className="w-full h-full"
+            >
+              {/* Graph Title */}
+              <text
+                x="50"
+                y="5"
+                fontSize="5"
+                fill="#374151"
+                textAnchor="middle"
+                fontWeight="bold"
+                className="dark:fill-white"
+              >
+                Error Rate (%)
+              </text>
+              {/* Y-axis ticks and labels */}
+              {[0, 0.25, 0.5, 0.75, 1].map((fraction, i) => {
+                const errorRate = (100 - 100 * fraction).toFixed(0);
+                const y = 15 + 75 * fraction;
+                return (
+                  <g key={i}>
+                    <line
+                      x1="0"
+                      y1={y}
+                      x2="100"
+                      y2={y}
+                      stroke="#E5E7EB"
+                      strokeWidth="0.5"
+                    />
+                    <text
+                      x="-10"
+                      y={y}
+                      fontSize="2"
+                      fill="#9CA3AF"
+                      dominantBaseline="middle"
+                      className="dark:fill-white"
+                    >
+                      {errorRate}%
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* X-axis line */}
+              <line
+                x1="0"
+                y1="90"
+                x2="100"
+                y2="90"
+                stroke="#E5E7EB"
+                strokeWidth="0.5"
+              />
+
+              {/* X-axis tick marks and labels */}
+              {timestamps.map((timestamp, i) => {
+                const maxTimestamp = timestamps[timestamps.length - 1];
+                const x = (timestamp / maxTimestamp) * 100;
+                return (
+                  <g key={i}>
+                    {/* Tick line */}
+                    <line
+                      x1={x}
+                      y1="90"
+                      x2={x}
+                      y2="93"
+                      stroke="#9CA3AF"
+                      strokeWidth="0.5"
+                    />
+                    {/* Tick label */}
+                    <text
+                      x={x}
+                      y="98"
+                      fontSize="3"
+                      fill="#6B7280"
+                      textAnchor="middle"
+                      className="dark:fill-white"
+                    >
+                      {timestamp}
+                    </text>
+                  </g>
+                );
+              })}
+
+              {/* Polyline for latency */}
+              <polyline
+                fill="none"
+                stroke="#4B5563"
+                strokeWidth="1"
+                points={errorPoints}
+                className="dark:stroke-white"
               />
             </svg>
           </div>

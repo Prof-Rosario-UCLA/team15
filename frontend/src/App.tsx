@@ -19,7 +19,7 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen max-h-screen">
       {/* todo: move title into its own component */}
-      <header className="bg-amber-100 dark:bg-gray-800 text-center">
+      <header className="bg-white dark:bg-gray-800 text-center">
         <h1 className="text-4xl font-bold tracking-wide text-gray-900 dark:text-white sm:text-5xl md:text-6xl p-2">
           Operations Status
         </h1>

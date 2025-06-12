@@ -12,7 +12,7 @@ const Service = ({ name, status, selected, onClick }: ServiceProps) => {
   const selectedStyle = selected ? "font-bold" : "font-normal";
 
   return (
-    <div className="flex justify-between items-center p-2 bg-gray-900 hover:bg-gray-700">
+    <div className="flex justify-between items-center p-2 hover:bg-gray-200 dark:hover:bg-gray-700">
       <div
         className={`w-3 h-3 rounded-full ${
           status === "working"
