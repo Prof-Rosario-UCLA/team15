@@ -20,3 +20,7 @@ plugins:
     opt:
       - import_style=typescript
       - mode=grpcweb
+
+  - remote: buf.build/protocolbuffers/js:v3.21.2
+    out: frontend/gen/ts
+    opt: import_style=es6,binary
