@@ -7,16 +7,16 @@ import * as healthPb from '../gen/ts/proto/health/v1/health_pb';
 import * as catalogPb from '../gen/ts/proto/catalog/v1/catalog_pb';
 
 // Types for the service objects
-interface ServiceObject {
-  [key: string]: any; // Adjust based on your actual service proto structure
-}
+// interface ServiceObject {
+//  [key: string]: any; // Adjust based on your actual service proto structure
+// }
 
-interface HealthObject {
-  [key: string]: any; // Adjust based on your actual health proto structure
-}
+// interface HealthObject {
+//  [key: string]: any; // Adjust based on your actual health proto structure
+// }
 
 // Type for stream handlers
-type HealthUpdateHandler = (health: HealthObject) => void;
+type HealthUpdateHandler = (health: healthPb.WatchHealthResponse.AsObject) => void;
 type ErrorHandler = (error: grpcWeb.RpcError) => void;
 
 export class BackendService {
@@ -26,8 +26,18 @@ export class BackendService {
 
   constructor(baseUrl: string = 'http://localhost:8080') {
     this.baseUrl = baseUrl;
-    this.healthClient = new healthGrpc.HealthServiceClient(this.baseUrl);
-    this.catalogClient = new catalogGrpc.CatalogServiceClient(this.baseUrl);
+    
+    // Configure gRPC-Web clients with streaming options
+    const options = {
+      unaryInterceptors: [],
+      streamInterceptors: [],
+      debug: true, // Enable debug mode to see what's happening
+      withCredentials: false,
+      format: 'text' // Use grpc-web-text format for better browser compatibility
+    };
+    
+    this.healthClient = new healthGrpc.HealthServiceClient(this.baseUrl, null, options);
+    this.catalogClient = new catalogGrpc.CatalogServiceClient(this.baseUrl, null, options);
   }
 
   // REST login; JWT stored in HttpOnly cookie automatically
@@ -69,14 +79,14 @@ export class BackendService {
   }
 
   // Stream listServices()
-  fetchServices(): Promise<ServiceObject[]> {
+  fetchServices(): Promise<catalogPb.Service.AsObject[]> {
     return new Promise((resolve, reject) => {
       try {
         const req = new catalogPb.ListServicesRequest();
         const stream = this.catalogClient.listServices(req, this.createMetadata());
-        const result: ServiceObject[] = [];
+        const result: catalogPb.Service.AsObject[] = [];
         
-        stream.on('data', (msg) => {
+        stream.on('data', (msg: catalogPb.ListServicesResponse) => {
           msg.getServicesList().forEach(s => result.push(s.toObject()));
         });
         
@@ -86,31 +96,49 @@ export class BackendService {
         reject(error);
       }
     });
-  }
-
-  // Stream watchHealth()
+  }  // Stream watchHealth()
   watchServiceHealth(
     serviceId: string, 
     onUpdate?: HealthUpdateHandler, 
     onError?: ErrorHandler
-  ): grpcWeb.ClientReadableStream<any> | undefined {
+  ): grpcWeb.ClientReadableStream<healthPb.WatchHealthResponse> | undefined {
     try {
+      console.log(`Starting health stream for service: ${serviceId}`);
       const req = new healthPb.WatchHealthRequest();
       req.setServiceId(serviceId);
-      const stream = this.healthClient.watchHealth(req, this.createMetadata());
       
-      stream.on('data', (msg) => {
+      const metadata = this.createMetadata();
+      console.log('Using metadata:', metadata);
+      
+      const stream = this.healthClient.watchHealth(req, metadata);
+      
+      stream.on('data', (msg: healthPb.WatchHealthResponse) => {
+        console.log(`Received health data for ${serviceId}:`, msg.toObject());
         if (onUpdate) {
           onUpdate(msg.toObject());
         }
       });
       
       stream.on('error', (err: grpcWeb.RpcError) => {
+        console.error(`Health stream error for ${serviceId}:`, {
+          code: err.code,
+          message: err.message,
+          metadata: err.metadata
+        });
         if (onError) {
           onError(err);
         }
       });
       
+      stream.on('end', () => {
+        console.log(`Health stream ended for service: ${serviceId}`);
+      });
+      
+      stream.on('status', (status) => {
+        console.log(`Health stream status for ${serviceId}:`, status);
+      });
+      
+      console.log(`Health stream started for service: ${serviceId}`);
       return stream;
     } catch (error) {
       if (onError) {

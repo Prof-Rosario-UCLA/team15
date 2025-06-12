@@ -1,13 +1,32 @@
 import React, { useState, useEffect } from "react";
-import { setTheme } from "./utils/theme";
 
 type Theme = "light" | "dark" | "system";
 
+const applyTheme = (theme: Theme) => {
+  if (theme === "system") {
+    localStorage.removeItem("theme");
+    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  } else {
+    localStorage.theme = theme;
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }
+};
+
 function ThemeSelector() {
-  const [selectedTheme, setSelectedTheme] = useState<Theme>("system");
+  const [selectedTheme, setSelectedTheme] = useState<Theme>(() => {
+    return (localStorage.getItem("theme") as Theme) || "system";
+  });
 
   useEffect(() => {
-    setTheme(selectedTheme);
+    applyTheme(selectedTheme);
   }, [selectedTheme]);
 
   return (
