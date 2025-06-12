@@ -5,7 +5,7 @@ import { AuthState } from './types';
 interface AuthContextType extends AuthState {
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
-  handleTokenExpiration: () => void; // Add this new function
+  handleTokenExpiration: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
